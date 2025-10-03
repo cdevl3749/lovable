@@ -17,7 +17,7 @@
     "type": "function",
     "z": "main",
     "name": "Prepare Hugging Face Request",
-    "func": "const question = msg.payload.question;\nconst country = msg.payload.country;\n\nmsg.method = 'POST';\nmsg.url = 'https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct';\nmsg.headers = {\n  'Authorization': 'Bearer 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', // ⚠️ remplace par ton token\n  'Content-Type': 'application/json'\n};\nmsg.payload = {\n  inputs: `Ma question : ${question}\\nMon pays : ${country}\\nDonne-moi une réponse claire à cette question pour ce pays. Si tu cites une source, indique l'URL.`\n};\nreturn msg;",
+    "func": "const question = msg.payload.question;\nconst country = msg.payload.country;\n\nmsg.method = 'POST';\nmsg.url = 'https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct';\nmsg.headers = {\n  'Authorization': 'Bearer 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', // ⚠️ remplace par ton token\n  'Content-Type': 'application/json'\n};\nmsg.payload = {\n  inputs: `Ma question : ${question}\\nMon pays : ${country}\\nDonne-moi une réponse claire à cette question pour ce pays. Si tu cites une source, indique l'URL.`\n};\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "x": 480,
