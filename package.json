@@ -2,9 +2,8 @@
   "name": "lexisai-nodered",
   "version": "1.0.0",
   "description": "Workflow IA (LexisAI) via Node-RED + Hugging Face + Firecrawl",
-  "main": "index.js",
   "scripts": {
-    "start": "node-red -v -s settings.js"
+    "start": "npx node-red -v -s settings.js"
   },
   "dependencies": {
     "node-red": "^3.1.0"
@@ -13,4 +12,5 @@
     "node": ">=18.x"
   }
 }
+
 
