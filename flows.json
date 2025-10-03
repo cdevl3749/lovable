@@ -1,0 +1,83 @@
+[
+  {
+    "id": "webhook_in",
+    "type": "http in",
+    "z": "main",
+    "name": "Receive Question",
+    "url": "/api/lexisai",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 180,
+    "y": 120,
+    "wires": [["prepare_hf_request"]]
+  },
+  {
+    "id": "prepare_hf_request",
+    "type": "function",
+    "z": "main",
+    "name": "Prepare Hugging Face Request",
+    "func": "const question = msg.payload.question;\nconst country = msg.payload.country;\n\nmsg.method = 'POST';\nmsg.url = 'https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct';\nmsg.headers = {\n  'Authorization': 'Bearer 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', // ⚠️ remplace par ton token\n  'Content-Type': 'application/json'\n};\nmsg.payload = {\n  inputs: `Ma question : ${question}\\nMon pays : ${country}\\nDonne-moi une réponse claire à cette question pour ce pays. Si tu cites une source, indique l'URL.`\n};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 480,
+    "y": 120,
+    "wires": [["hf_request"]]
+  },
+  {
+    "id": "hf_request",
+    "type": "http request",
+    "z": "main",
+    "name": "Hugging Face Response",
+    "method": "use",
+    "ret": "obj",
+    "x": 760,
+    "y": 120,
+    "wires": [["prepare_firecrawl"]]
+  },
+  {
+    "id": "prepare_firecrawl",
+    "type": "function",
+    "z": "main",
+    "name": "Prepare Firecrawl Request",
+    "func": "// essaie d'extraire une URL de la réponse IA\nlet text = '';\nif (msg.payload[0] && msg.payload[0].generated_text) {\n  text = msg.payload[0].generated_text;\n}\nconst match = text.match(/https?:\\/\\/[^\\s)]+/);\n\nif (!match) {\n  msg.payload = { answer: text, note: 'Aucune source détectée. Réponse directe IA.' };\n  msg.topic = 'skip_firecrawl';\n  return [null, msg]; // passe à la sortie 2 si pas d'URL\n}\n\nconst url = match[0];\n\nmsg.method = 'POST';\nmsg.url = 'https://api.firecrawl.dev/v2/scrape';\nmsg.headers = {\n  'Authorization': 'Bearer fc-1b065754c1354c24b6e14a834163fc1c', // ⚠️ remplace par ta clé Firecrawl\n  'Content-Type': 'application/json'\n};\nmsg.payload = { url, formats: [{ type: 'json' }] };\nmsg.extractedUrl = url;\nreturn [msg, null];",
+    "outputs": 2,
+    "noerr": 0,
+    "x": 1060,
+    "y": 120,
+    "wires": [["firecrawl_request"], ["send_response"]]
+  },
+  {
+    "id": "firecrawl_request",
+    "type": "http request",
+    "z": "main",
+    "name": "Firecrawl Scrape",
+    "method": "use",
+    "ret": "obj",
+    "x": 1330,
+    "y": 80,
+    "wires": [["extract_answer"]]
+  },
+  {
+    "id": "extract_answer",
+    "type": "function",
+    "z": "main",
+    "name": "Extract Answer",
+    "func": "const scraped = JSON.stringify(msg.payload).substring(0, 300);\nmsg.payload = {\n  answer: `Réponse IA + extrait du site (${msg.extractedUrl}): ${scraped}...`,\n  note: 'Données extraites via Firecrawl et modèle open-source Hugging Face.'\n};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "x": 1580,
+    "y": 80,
+    "wires": [["send_response"]]
+  },
+  {
+    "id": "send_response",
+    "type": "http response",
+    "z": "main",
+    "name": "Send Response",
+    "statusCode": "200",
+    "x": 1820,
+    "y": 120,
+    "wires": []
+  }
+]
